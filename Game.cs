@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics.Eventing.Reader;
+using System.Linq.Expressions;
 using System.Media;
 
 namespace DungeonExplorer
@@ -11,15 +15,75 @@ namespace DungeonExplorer
         public Game()
         {
             // Initialize the game with one room and one player
+            Player player1 = new Player("Player", 10);
+            player = player1;
 
+            List<string> newItems = new List<string>();
+            newItems.Add("Sword");
+            Room starting_room = new Room("This is the starting room and I'm terrible at descriptions.", newItems);
+            currentRoom = starting_room;
         }
         public void Start()
         {
             // Change the playing logic into true and populate the while loop
-            bool playing = false;
+            bool playing = true;
             while (playing)
             {
                 // Code your playing logic here
+                string optionsString = "\nOptions:\nView Player Stats (Stats)\n";
+                bool itemAvailable = false;
+                Console.WriteLine(currentRoom.GetDescription());
+                if (currentRoom.GetItemCount() > 0)
+                {
+                    optionsString += "Get Item (Get)\n";
+                    itemAvailable = true;
+                }
+
+                string userInput = InputCheckStrings(optionsString + "Exit\n");
+                if (userInput.Contains("Stats"))
+                {
+                    Console.WriteLine("Name = {0}\nHealth = {1}\nInventory = {2}", player.Name, player.Health, player.InventoryContents());
+                }
+                else if (userInput.StartsWith("Get") && itemAvailable == true)
+                {
+                    List<string> items = currentRoom.GetItems();
+                    Console.WriteLine("\nAvailable Items:\n");
+                    foreach (string item in items)
+                    {
+                        Console.WriteLine(item);
+                    }
+
+                    userInput = InputCheckStrings("\nWhich would you like to pick up?\n");
+                    if (items.Contains(userInput))
+                    {
+                        currentRoom.RemoveItem(userInput);
+                        player.PickUpItem(userInput);
+                        Console.WriteLine("You have picked up a " + userInput);
+                    }
+                    else
+                        Console.WriteLine("That was not an available item.");
+                }
+            }
+        }
+
+        public string InputCheckStrings(string displayString)
+        {
+            while (true)
+            {
+                Console.WriteLine(displayString);
+                try
+                {
+                    string userInput = Console.ReadLine();
+                    return userInput;
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine("That was not a valid input, please try again\n");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message + " If you see this, please report it to the Developer.\n");
+                }
             }
         }
     }
